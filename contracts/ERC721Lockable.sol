@@ -74,6 +74,10 @@ contract LockableNFT is ERC721Enumerable, ILockableNFT {
         emit Unlocked(tokenId);
     }
 
+    function isLocked(uint256 tokenId) {
+        return lockers[tokenId] != address(0);
+    }
+
     function getMyRewardBalance(uint256 tokenId) public view returns (uint256) {
         uint256 timeDifference = block.timestamp - deadlines[tokenId];
         return calculateReward(timeDifference);
@@ -93,61 +97,6 @@ contract LockableNFT is ERC721Enumerable, ILockableNFT {
 
     function getLocker(uint256 tokenId) public view returns (address) {
         return lockers[tokenId];
-    }
-
-    // Auction-related functions
-    function startAuction(uint256 tokenId) external {
-        require(!tokenExists(tokenId), "Token does not exist");
-        require(ownerOf(tokenId) == msg.sender, "Not the owner of the token");
-        require(!tokenExists(tokenId), "Token is locked, cannot auction");
-
-        // Transfer the token to the contract
-        _transfer(msg.sender, address(this), tokenId);
-
-        // Set the auction start time and price
-        // You can customize these values based on your auction logic
-        // For simplicity, we use the same start time and start price for all auctions
-        uint256 auctionStartTime = block.timestamp;
-        uint256 startPrice = 1 ether;
-
-        emit AuctionStarted(tokenId, startPrice, auctionStartTime);
-    }
-
-    function bid(uint256 tokenId) external payable {
-        require(tokenExists(tokenId), "Token does not exist");
-        require(
-            lockers[tokenId] != address(0),
-            "Token is not locked, cannot bid"
-        );
-        require(msg.value > 0, "Bid amount must be greater than zero");
-
-        // Auction logic goes here
-        // You can implement your auction logic based on your requirements
-        // For simplicity, we do not implement a full auction logic in this example
-        // You can use an external library or implement a custom logic for your auction
-
-        emit BidPlaced(tokenId, msg.sender, msg.value);
-    }
-
-    // Events
-    event AuctionStarted(
-        uint256 indexed tokenId,
-        uint256 startPrice,
-        uint256 startTime
-    );
-    event BidPlaced(
-        uint256 indexed tokenId,
-        address indexed bidder,
-        uint256 amount
-    );
-
-    // Fallback function to receive Ether bids
-    receive() external payable {}
-
-    // Function to withdraw Ether from the contract
-    function withdraw() external {
-        require(msg.sender == owner(), "Only owner can withdraw");
-        payable(owner()).transfer(address(this).balance);
     }
 
     event Locked(uint256 indexed tokenId, address indexed locker);
